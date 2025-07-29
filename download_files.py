@@ -198,13 +198,6 @@ parameter_dict = {
 download_details = {}
 
 for elem in status['data']:
-  # if elem['request_index'] != 797158:
-  #   continue
-  # else:
-  #   print()
-  #   print(elem["subset_info"]['note'])
-  #   exit()
-  
   if elem['status'] == "Queued for Processing":
     request_index = elem['request_index']
     print("QUEUED NOT READY", request_index)
@@ -217,6 +210,12 @@ for elem in status['data']:
     parameter = parameter_dict[extract_parameter(elem["subset_info"]['note'])]
     print(elem['request_index'], loc, parameter, "ERROR")
     download_details[(loc, parameter)] = "ERROR"
+    
+    # request_index = str(elem['request_index'])
+    # print(f"PURGING {request_index}")
+    # # continue
+    # rc.purge_request(request_index)
+    
     continue
   
   loc_found = False
@@ -228,21 +227,28 @@ for elem in status['data']:
       if parameter == None:
         print("UNABLE TO FIND ERROR")
         exit()
+        
+      date_range_match = re.search(r"Date range: (.*)", elem["subset_info"]['note'])
+      date_range_str = ""
+      if date_range_match:
+        date_range_str = date_range_match.group(1)
+        print(date_range_str)
       
       request_index = elem['request_index']
-      download_output = rc.download(request_index)
-      download_details[(loc, parameter)] = download_output['data']['web_files'][0]['wfile']
+      download_output = rc.download(request_index, out_dir=f"./downloaded_files/{loc}_{parameter}_{date_range_str}_")
+      print(elem, parameter)
 
   if loc_found == False:
     print()
     print("NO LOC FOUND", elem['request_index'])
 
 
-print()
-print(download_details)
+# print()
+# print(download_details)
 
-with open("rda_downloaded_files.txt", "w") as f:
-  json.dump(download_details, f, indent=2)
+
+# with open("rda_downloaded_files.txt", "w") as f:
+#   json.dump(download_details, f, indent=2)
 
 
 """
